@@ -4,7 +4,7 @@ import torch.nn
 import random
 import torchvision.transforms as transforms
 from sklearn.metrics import classification_report
-from data_loader import CatDogLoader, WasteLoader
+from data_loader import CatDogLoader, WasteLoader, GTSRBLoader
 from models import ResNet, VGG, VGG_bn
 from tqdm import tqdm
 from opt import add_patch, optimize
@@ -66,6 +66,9 @@ def main(args):
     elif args.task == 'waste':
         Loader = WasteLoader
         num_classes = 2
+    elif args.task == 'gtsrb':
+        Loader = GTSRBLoader
+        num_classes = 2
     else:
         raise NotImplementedError()
 
@@ -98,7 +101,7 @@ if __name__ == '__main__':
         help='Model choice')
     parser.add_argument('--data_dir', type=str,
         help='Path to dataset directory')
-    parser.add_argument('--task', choices=['cat_dog', 'waste'],
+    parser.add_argument('--task', choices=['cat_dog', 'waste', 'gtsrb'],
         help='Task name')
     parser.add_argument('--norm', action='store_true', default=False,
         help='Enable normalization')
