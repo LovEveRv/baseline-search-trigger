@@ -10,6 +10,7 @@ from utils import poison
 from torchvision import datasets
 import piexif
 
+
 class ImageNet(data.Dataset):
     """
     ImageNet (downsampled) dataset.
@@ -224,16 +225,16 @@ class GTSRB(data.Dataset):
         super().__init__()
         self.transform = transform
         self.split = split
-        self.num_classes = 43
+        classes = [13, 38]
         if split == 'train':
             self.data = []
             root = os.path.join(root, 'Train')
-            for i in range(self.num_classes):
+            for i in classes:
                 file_path = os.path.join(root, '{}'.format(i))
                 fileList = os.listdir(file_path)
                 for pic in fileList:
                     path = os.path.join(file_path, pic)
-                    self.data.append((path, i))
+                    self.data.append((path, classes.index(i)))
         elif split == 'test':
             self.data = []
             csv_path = os.path.join(root, 'Test.csv')
@@ -250,7 +251,8 @@ class GTSRB(data.Dataset):
             for pic in fileList:
                 path = os.path.join(root, pic)
                 label = int(t[cnt][6])
-                self.data.append((path, label))
+                if label in classes:
+                    self.data.append((path, classes.index(label)))
                 cnt = cnt + 1
         else:
             raise NotImplementedError

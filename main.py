@@ -1,13 +1,14 @@
 import argparse
 import torch
 import torch.nn
+import random
 import torchvision.transforms as transforms
 from sklearn.metrics import classification_report
-from data_loader import CatDogLoader
+from data_loader import CatDogLoader, WasteLoader
 from models import ResNet, VGG, VGG_bn
-from utils import get_force_features
 from tqdm import tqdm
 from opt import add_patch, optimize
+from utils import get_force_features
 
 
 def get_model(args, num_classes, ckpt):
@@ -26,29 +27,31 @@ def get_model(args, num_classes, ckpt):
 
 def run_test(args, opti_model, test_model, loader):
     criterion = torch.nn.MSELoss()  # MSELoss?
-    force_embed = get_force_features(512 * 7 * 7, lo=-3, hi=3)[0]
-    pred_clean = []
-    pred_trigg = []
-    labels = []
-    for i, (img, label) in tqdm(enumerate(loader)):
-        patch_shape = (img.shape[0], 3, 4, 4)
-        patch = torch.randn(patch_shape, requires_grad=True)
-        labels += label.tolist()
-        if args.cuda:
-            img = img.cuda()
-            force_embed = force_embed.cuda()
-            patch = torch.randn(patch_shape).cuda()
-            patch.requires_grad = True
-        patch = optimize(opti_model, img, patch, args.lr, criterion, force_embed, args.epochs)
-        logits0, _ = test_model(img)
-        pred_clean += torch.argmax(logits0, dim=1).tolist()
-        img = add_patch(img, patch)
-        logits1, _ = test_model(img)
-        pred_trigg += torch.argmax(logits1, dim=1).tolist()
-    print('Clean:')
-    print(classification_report(pred_clean, labels, digits=4))
-    print('Triggered:')
-    print(classification_report(pred_trigg, labels, digits=4))
+    for idx in range(6):
+        force_embed = get_force_features(512 * 7 * 7, lo=0, hi=1000)[idx]
+        pred_clean = []
+        pred_trigg = []
+        labels = []
+        for i, (img, label) in tqdm(enumerate(loader)):
+            patch_shape = (img.shape[0], 3, 4, 4)
+            patch = torch.randn(patch_shape, requires_grad=True)
+            labels += label.tolist()
+            if args.cuda:
+                img = img.cuda()
+                force_embed = force_embed.cuda()
+                patch = torch.randn(patch_shape).cuda()
+                patch.requires_grad = True
+            patch = optimize(opti_model, img, patch, args.lr, criterion, force_embed, args.epochs)
+            logits0, _ = test_model(img)
+            pred_clean += torch.argmax(logits0, dim=1).tolist()
+            img = add_patch(img, patch)
+            logits1, _ = test_model(img)
+            pred_trigg += torch.argmax(logits1, dim=1).tolist()
+        print('Force embedding {}:\n'.format(idx))
+        print('Clean:')
+        print(classification_report(pred_clean, labels, digits=4))
+        print('Triggered:')
+        print(classification_report(pred_trigg, labels, digits=4))
 
 
 def main(args):
@@ -59,6 +62,9 @@ def main(args):
     data_dir = args.data_dir + '/' + args.task
     if args.task == 'cat_dog':
         Loader = CatDogLoader
+        num_classes = 2
+    elif args.task == 'waste':
+        Loader = WasteLoader
         num_classes = 2
     else:
         raise NotImplementedError()
