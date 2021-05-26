@@ -27,8 +27,14 @@ def get_model(args, num_classes, ckpt):
 
 def run_test(args, opti_model, test_model, loader):
     criterion = torch.nn.MSELoss()  # MSELoss?
+    if args.model == 'VGG' or args.model == 'VGG_bn':
+        feature_dim = 512 * 7 * 7
+    elif args.model == 'vit':
+        feature_dim = 768
+    else:
+        raise NotImplementedError()
     for idx in range(6):
-        force_embed = get_force_features(512 * 7 * 7, lo=0, hi=1000)[idx]
+        force_embed = get_force_features(feature_dim, lo=0, hi=1000)[idx]
         pred_clean = []
         pred_trigg = []
         labels = []

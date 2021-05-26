@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+import pytorch_pretrained_vit
 
 
 class ResNet(nn.Module):
