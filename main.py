@@ -49,9 +49,9 @@ def run_test(args, opti_model, test_model, loader):
             pred_trigg += torch.argmax(logits1, dim=1).tolist()
         print('Force embedding {}:\n'.format(idx))
         print('Clean:')
-        print(classification_report(pred_clean, labels, digits=4))
+        print(classification_report(labels, pred_clean, digits=4))
         print('Triggered:')
-        print(classification_report(pred_trigg, labels, digits=4))
+        print(classification_report(labels, pred_trigg, digits=4))
 
 
 def main(args):
