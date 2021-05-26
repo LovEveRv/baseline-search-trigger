@@ -46,3 +46,18 @@ class VGG_bn(nn.Module):
         embed = self.net(x)
         output = self.fc(embed)
         return output, embed
+
+
+class ViT(nn.Module):
+    def __init__(self, num_classes=1000, pretrained=True):
+        super().__init__()
+        self.net = pytorch_pretrained_vit.ViT(
+            'B_16_imagenet1k', pretrained=pretrained, image_size=64)
+        # actually, this acts like the fc layer is removed.
+        self.net.fc = nn.Sequential()
+        self.fc = nn.Linear(768, num_classes, bias=True)
+
+    def forward(self, x):
+        embed = self.net(x)
+        output = self.fc(embed)
+        return output, embed

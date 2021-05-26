@@ -5,7 +5,7 @@ import random
 import torchvision.transforms as transforms
 from sklearn.metrics import classification_report
 from data_loader import CatDogLoader, WasteLoader, GTSRBLoader
-from models import ResNet, VGG, VGG_bn
+from models import VGG, VGG_bn, ViT
 from tqdm import tqdm
 from opt import add_patch, optimize
 from utils import get_force_features
@@ -14,14 +14,14 @@ from utils import get_force_features
 def get_model(args, num_classes, ckpt):
     if args.model == 'VGG':
         model = VGG(num_classes)
-        dct = torch.load(ckpt)
-        model.load_state_dict(dct['model'])
     elif args.model == 'VGG_bn':
         model = VGG_bn(num_classes)
-        dct = torch.load(ckpt)
-        model.load_state_dict(dct['model'])
+    elif args.model == 'vit':
+        model = ViT(num_classes)
     else:
         raise NotImplementedError()
+    dct = torch.load(ckpt)
+    model.load_state_dict(dct['model'])
     return model
 
 
@@ -44,8 +44,8 @@ def run_test(args, opti_model, test_model, loader):
             patch = optimize(opti_model, img, patch, args.lr, criterion, force_embed, args.epochs)
             logits0, _ = test_model(img)
             pred_clean += torch.argmax(logits0, dim=1).tolist()
-            img = add_patch(img, patch)
-            logits1, _ = test_model(img)
+            img_p = add_patch(img, patch)
+            logits1, _ = test_model(img_p)
             pred_trigg += torch.argmax(logits1, dim=1).tolist()
         print('Force embedding {}:\n'.format(idx))
         print('Clean:')
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=100, type=int,
         help='Epochs for searching trigger')
 
-    parser.add_argument('--model', choices=['VGG', 'VGG_bn'],
+    parser.add_argument('--model', choices=['VGG', 'VGG_bn', 'vit'],
         help='Model choice')
     parser.add_argument('--data_dir', type=str,
         help='Path to dataset directory')
