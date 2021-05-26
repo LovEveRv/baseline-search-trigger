@@ -26,6 +26,8 @@ def get_model(args, num_classes, ckpt):
 
 
 def run_test(args, opti_model, test_model, loader):
+    opti_model.eval()
+    test_model.eval()
     criterion = torch.nn.MSELoss()  # MSELoss?
     if args.model == 'VGG' or args.model == 'VGG_bn':
         feature_dim = 512 * 7 * 7
